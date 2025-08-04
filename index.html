@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Calculator</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        /* Main calculator container */
+        .calculator {
+            width: 100%;
+            max-width: 320px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background-color: #3a4452;
+            overflow: hidden;
+        }
+
+        /* Display screen */
+        .display {
+            background-color: #222933;
+            color: #ffffff;
+            font-size: 2.5rem;
+            text-align: right;
+            padding: 20px;
+            word-wrap: break-word;
+            word-break: break-all;
+            min-height: 50px;
+        }
+
+        /* Grid container for buttons */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+        }
+
+        /* General button styling */
+        .btn {
+            background-color: #4b5563;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #6b7280;
+        }
+
+        .btn:active {
+            background-color: #5a6270;
+        }
+
+        /* Specific styles for different button types */
+        .btn.operator {
+            background-color: #f59e0b; /* Amber color for operators */
+        }
+
+        .btn.operator:hover {
+            background-color: #fbbf24;
+        }
+
+        .btn.clear {
+            background-color: #ef4444; /* Red color for clear */
+        }
+
+        .btn.clear:hover {
+            background-color: #f87171;
+        }
+
+        .btn.equals {
+            background-color: #22c55e; /* Green color for equals */
+            grid-column: span 2; /* Make equals button wider */
+        }
+
+        .btn.equals:hover {
+            background-color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <!-- Row 1 -->
+            <button class="btn clear" data-action="clear">C</button>
+            <button class="btn operator" data-action="operator" data-value="/">÷</button>
+            <button class="btn operator" data-action="operator" data-value="*">×</button>
+            
+            <!-- Row 2 -->
+            <button class="btn" data-action="number" data-value="7">7</button>
+            <button class="btn" data-action="number" data-value="8">8</button>
+            <button class="btn" data-action="number" data-value="9">9</button>
+            <button class="btn operator" data-action="operator" data-value="-">−</button>
+
+            <!-- Row 3 -->
+            <button class="btn" data-action="number" data-value="4">4</button>
+            <button class="btn" data-action="number" data-value="5">5</button>
+            <button class="btn" data-action="number" data-value="6">6</button>
+            <button class="btn operator" data-action="operator" data-value="+">+</button>
+
+            <!-- Row 4 -->
+            <button class="btn" data-action="number" data-value="1">1</button>
+            <button class="btn" data-action="number" data-value="2">2</button>
+            <button class="btn" data-action="number" data-value="3">3</button>
+            <button class="btn equals" data-action="equals">=</button>
+
+            <!-- Row 5 (merged with row 4 due to equals span) -->
+            <button class="btn" data-action="number" data-value="0">0</button>
+            <button class="btn" data-action="decimal" data-value=".">.</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const display = document.getElementById('display');
+            const buttonsContainer = document.querySelector('.buttons');
+
+            let firstValue = '';
+            let operator = '';
+            let secondValue = '';
+            let shouldResetDisplay = false;
+
+            // Use event delegation for handling button clicks
+            buttonsContainer.addEventListener('click', (event) => {
+                const target = event.target;
+                if (!target.matches('button')) return;
+
+                const { action, value } = target.dataset;
+
+                if (action === 'number') {
+                    handleNumber(value);
+                } else if (action === 'decimal') {
+                    handleDecimal();
+                } else if (action === 'operator') {
+                    handleOperator(value);
+                } else if (action === 'clear') {
+                    clearCalculator();
+                } else if (action === 'equals') {
+                    handleEquals();
+                }
+                updateDisplay();
+            });
+
+            function handleNumber(number) {
+                if (display.textContent === '0' || shouldResetDisplay) {
+                    display.textContent = number;
+                    shouldResetDisplay = false;
+                } else {
+                    display.textContent += number;
+                }
+            }
+
+            function handleDecimal() {
+                if (shouldResetDisplay) {
+                    display.textContent = '0.';
+                    shouldResetDisplay = false;
+                    return;
+                }
+                if (!display.textContent.includes('.')) {
+                    display.textContent += '.';
+                }
+            }
+
+            function handleOperator(nextOperator) {
+                if (operator && !shouldResetDisplay) {
+                    calculate();
+                }
+                firstValue = display.textContent;
+                operator = nextOperator;
+                shouldResetDisplay = true;
+            }
+
+            function handleEquals() {
+                if (!operator || shouldResetDisplay) return;
+                calculate();
+                operator = ''; // Reset operator after calculation
+                shouldResetDisplay = true;
+            }
+
+            function calculate() {
+                if (!operator) return;
+                secondValue = display.textContent;
+                const num1 = parseFloat(firstValue);
+                const num2 = parseFloat(secondValue);
+                let result = 0;
+
+                switch (operator) {
+                    case '+': result = num1 + num2; break;
+                    case '-': result = num1 - num2; break;
+                    case '*': result = num1 * num2; break;
+                    case '/':
+                        if (num2 === 0) {
+                            result = 'Error';
+                        } else {
+                            result = num1 / num2;
+                        }
+                        break;
+                }
+                display.textContent = result;
+                firstValue = result.toString(); // Allow chaining operations
+            }
+
+            function clearCalculator() {
+                display.textContent = '0';
+                firstValue = '';
+                operator = '';
+                secondValue = '';
+                shouldResetDisplay = false;
+            }
+
+            function updateDisplay() {
+                // This function is currently a placeholder as logic directly updates the display.
+                // It could be expanded for more complex display formatting if needed.
+            }
+        });
+    </script>
+
+</body>
+</html>
